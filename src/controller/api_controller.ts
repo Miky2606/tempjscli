@@ -54,7 +54,7 @@ export const find_template = async (
     };
   } catch (error) {
     if (error instanceof axios.AxiosError) {
-      return responseError<ITemplate>(error);
+      return await responseError<ITemplate>(error);
     }
     return {
       error: error as string,
@@ -65,12 +65,15 @@ export const find_template = async (
 export const upload_template = async (
   code_auth: string,
   name: string
-): Promise<ResponseServer<IUser>> => {
+): Promise<ResponseServer<{ user: IUser; id: string }>> => {
   try {
-    const find = await axios.post<{ data: IUser }>(`${API_URL}/templates`, {
-      code_auth: code_auth,
-      name: name,
-    });
+    const find = await axios.post<{ data: { user: IUser; id: string } }>(
+      `${API_URL}/templates`,
+      {
+        code_auth: code_auth,
+        name: name,
+      }
+    );
 
     return {
       data: find.data.data,
@@ -80,6 +83,50 @@ export const upload_template = async (
       if (error.response?.status === 400) return responseError(error);
     }
 
+    return {
+      error: error as string,
+    };
+  }
+};
+
+export const update_downloads = async (
+  id: string
+): Promise<ResponseServer<string>> => {
+  try {
+    const find = await axios.put<{ data: string }>(`${API_URL}/templates`, {
+      id: id,
+    });
+
+    return {
+      data: find.data.data,
+    };
+  } catch (error) {
+    if (error instanceof axios.AxiosError) {
+      return responseError<string>(error);
+    }
+    return {
+      error: error as string,
+    };
+  }
+};
+
+export const delete_template = async (
+  id: string
+): Promise<ResponseServer<string>> => {
+  try {
+    const find = await axios.delete<{ data: string }>(`${API_URL}/templates`, {
+      data: {
+        id: id,
+      },
+    });
+
+    return {
+      data: find.data.data,
+    };
+  } catch (error) {
+    if (error instanceof axios.AxiosError) {
+      return responseError<string>(error);
+    }
     return {
       error: error as string,
     };

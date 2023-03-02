@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.upload_template = exports.find_template = exports.find_user = void 0;
+exports.delete_template = exports.update_downloads = exports.upload_template = exports.find_template = exports.find_user = void 0;
 const axios_1 = __importDefault(require("axios"));
 const API_URL = "http://localhost:3000/api/";
 const responseError = (error) => {
@@ -61,7 +61,7 @@ const find_template = (id) => __awaiter(void 0, void 0, void 0, function* () {
     }
     catch (error) {
         if (error instanceof axios_1.default.AxiosError) {
-            return responseError(error);
+            return yield responseError(error);
         }
         return {
             error: error,
@@ -91,4 +91,44 @@ const upload_template = (code_auth, name) => __awaiter(void 0, void 0, void 0, f
     }
 });
 exports.upload_template = upload_template;
+const update_downloads = (id) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const find = yield axios_1.default.put(`${API_URL}/templates`, {
+            id: id,
+        });
+        return {
+            data: find.data.data,
+        };
+    }
+    catch (error) {
+        if (error instanceof axios_1.default.AxiosError) {
+            return responseError(error);
+        }
+        return {
+            error: error,
+        };
+    }
+});
+exports.update_downloads = update_downloads;
+const delete_template = (id) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const find = yield axios_1.default.delete(`${API_URL}/templates`, {
+            data: {
+                id: id,
+            },
+        });
+        return {
+            data: find.data.data,
+        };
+    }
+    catch (error) {
+        if (error instanceof axios_1.default.AxiosError) {
+            return responseError(error);
+        }
+        return {
+            error: error,
+        };
+    }
+});
+exports.delete_template = delete_template;
 //# sourceMappingURL=api_controller.js.map
