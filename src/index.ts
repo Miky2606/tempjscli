@@ -37,7 +37,7 @@ program
         const route = `${resp.data?.user.name}/${option.name}`;
         if (resp.error === undefined) {
           const find = await findFile(
-            "Miky2606/hola3/",
+            route,
             process.cwd(),
             "",
             "upload",
@@ -59,7 +59,7 @@ program
       //Download
       if (option.download !== undefined) {
         const resp_template = await find_template(option.download);
-        const route = `C:/Users/Jonathan/Desktop/tempjs/user/${resp_template.data?.user[0].name}/${resp_template.data?.name}`;
+        const route = `${resp_template.data?.user[0].name}/${resp_template.data?.name}`;
         const update = await update_downloads(
           resp_template.data?._id as string
         );
@@ -70,8 +70,8 @@ program
         if (resp_template.error !== undefined)
           return console.table(resp_template.error);
         return findFile(
-          route_download,
           route,
+          route_download,
           "Successfylly download",
           "download",
           option.name

@@ -11,8 +11,9 @@ import { S3Client, ListObjectsV2Command } from "@aws-sdk/client-s3";
 const clc = require("cli-color");
 import modules from "./config";
 const archiver = require("archiver");
-import { Readable } from "stream";
-import path, { dirname } from "path";
+import path from "path";
+const json = require("../../command.json");
+import {readme} from "../readme"
 
 type TypeForm = "upload" | "download";
 const REGION = "us-east-1";
@@ -35,12 +36,18 @@ export const findFile = async (
 ): Promise<unknown> => {
   try {
     // if (await fs.existsSync(route)) return await fs.mkdirSync(route);
-    const routes = "Miky2606/new/";
+  
     if (type === "upload") {
-      await uploadFolderToS3(modules.Bucket, source, `Miky2606/new/`);
+      console.log(route)
+      await uploadFolderToS3(modules.Bucket, source, route);
     } else {
-      await downloadFolderFromS3(modules.Bucket, routes, route);
-    }
+    const download =   await downloadFolderFromS3(modules.Bucket,route, source);
+    if(download){
+      removeFolderAndFilesEmpty(source)
+      return readCommandFile(route, id)
+    } 
+    else return console.error("Error in the download")
+  }
     // return console.log(clc.green(message));
   } catch (error) {
     if (error instanceof Error) return console.log(error);
@@ -71,7 +78,12 @@ const readCommandFile = async (route: string, id: string | undefined) => {
 
       const run = runCommand(x);
       if (!run) process.exit(-1);
+
+      
     }
+
+    console.log("download success")
+
   } catch (error) {
     console.log(error);
   }
@@ -89,27 +101,28 @@ const runCommand = async (command: string) => {
 
 export const createInit = async () => {
   try {
+    
     const templates: ITemplateInit[] = [
       {
         name: "command.json",
-        content: await getReadme(
-          `C:/Users/Jonathan/Desktop/tempjs/command.json`
-        ),
+        content:  toStringInit(json),
       },
       {
         name: "readme.md",
-        content: await getReadme(`C:/Users/Jonathan/Desktop/tempjs/readme.md`),
+        content:  toStringInit(readme),
       },
     ];
-    return templates.map((e) => fs.writeFileSync(e.name, e.content));
+    return templates.map((e) => fs.writeFileSync(e.name, e.content as string));
   } catch (error) {
     console.error(error);
   }
 };
 
-const getReadme = async (route: string) => {
-  const x = await fs.readFileSync(route);
-  return x.toString();
+const toStringInit =  (route: unknown):string => {
+  console.log(typeof route)
+ if( typeof route === 'object') return JSON.stringify(json)
+ if(typeof route === 'string') return route
+return route as string
 };
 
 const uploadFiles = async (route: string, source: string) => {
@@ -177,7 +190,7 @@ const streamToString = (stream: any) =>
 async function uploadFolderToS3(
   bucketName: string,
   folderPath: string,
-  s3KeyPrefix: string = ""
+  s3KeyPrefix: string 
 ): Promise<void> {
   const files = fs.readdirSync(folderPath);
 
@@ -231,11 +244,14 @@ async function downloadFolderFromS3(
   bucketName: string,
   folderPath: string,
   route: string
-): Promise<void> {
+): Promise<boolean | undefined> {
   const listObjectsParams = {
     Bucket: bucketName,
     Prefix: folderPath,
   };
+
+
+
   const listObjectsCommand = new ListObjectsV2Command(listObjectsParams);
 
   try {
@@ -253,10 +269,11 @@ async function downloadFolderFromS3(
       const getObjectCommand = new GetObjectCommand(getObjectParams);
       const getObjectOutput = await s3Client.send(getObjectCommand);
       const relativeS3ObjectPath = s3Key.replace(folderPath, "");
-      console.log(relativeS3ObjectPath);
+    
       const localDirectory = path.join(route, relativeS3ObjectPath);
-      const split = object.Key?.split("/");
-      if (object.Size === 0 || !split![split!.length - 1].includes(".")) {
+    
+      
+      if (object.Size === 0) {
         // This is an empty directory, create a local directory with the same name
         fs.mkdirSync(localDirectory, { recursive: true });
         continue;
@@ -266,12 +283,48 @@ async function downloadFolderFromS3(
       fs.mkdirSync(path.dirname(localDirectory), { recursive: true });
 
       const buffer = await streamToString(getObjectOutput.Body);
-      fs.writeFileSync(
+       fs.writeFileSync(
         path.join(route, relativeS3ObjectPath),
         buffer as string
       );
+       
+      
+
+      
     }
+    return true
   } catch (error) {
     console.error(error);
+    return false
   }
+}
+
+async function removeFolderAndFilesEmpty(source:string) {
+  try {
+    const files = fs.readdirSync(source);
+
+    
+    for (const file of files) {
+      const filePath = `${source}/${file}`;
+  
+    
+      if (fs.statSync(filePath).isDirectory()) {
+        removeFolderAndFilesEmpty(filePath);
+  
+        
+        if (fs.readdirSync(filePath).length === 0) {
+          fs.rmdirSync(filePath);
+        }
+      } else {
+        
+        if (fs.statSync(filePath).size === 0) {
+          fs.unlinkSync(filePath);
+        }
+      }
+    }
+  
+  } catch (error) {
+    console.error(error)
+  }
+  
 }

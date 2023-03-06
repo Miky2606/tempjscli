@@ -31,7 +31,7 @@ program
             const resp = yield (0, api_controller_1.upload_template)(option.upload, option.name);
             const route = `${(_a = resp.data) === null || _a === void 0 ? void 0 : _a.user.name}/${option.name}`;
             if (resp.error === undefined) {
-                const find = yield (0, upload_controller_1.findFile)("Miky2606/hola3/", process.cwd(), "", "upload", "");
+                const find = yield (0, upload_controller_1.findFile)(route, process.cwd(), "", "upload", "");
                 if (typeof find === "string") {
                     setTimeout(() => __awaiter(void 0, void 0, void 0, function* () {
                         var _f;
@@ -45,12 +45,12 @@ program
         //Download
         if (option.download !== undefined) {
             const resp_template = yield (0, api_controller_1.find_template)(option.download);
-            const route = `C:/Users/Jonathan/Desktop/tempjs/user/${(_b = resp_template.data) === null || _b === void 0 ? void 0 : _b.user[0].name}/${(_c = resp_template.data) === null || _c === void 0 ? void 0 : _c.name}`;
+            const route = `${(_b = resp_template.data) === null || _b === void 0 ? void 0 : _b.user[0].name}/${(_c = resp_template.data) === null || _c === void 0 ? void 0 : _c.name}`;
             const update = yield (0, api_controller_1.update_downloads)((_d = resp_template.data) === null || _d === void 0 ? void 0 : _d._id);
             const route_download = `${process.cwd()}/${option.name === undefined ? (_e = resp_template.data) === null || _e === void 0 ? void 0 : _e.name : option.name}`;
             if (resp_template.error !== undefined)
                 return console.table(resp_template.error);
-            return (0, upload_controller_1.findFile)(route_download, route, "Successfylly download", "download", option.name);
+            return (0, upload_controller_1.findFile)(route, route_download, "Successfylly download", "download", option.name);
         }
         //Init
         if (option.init) {

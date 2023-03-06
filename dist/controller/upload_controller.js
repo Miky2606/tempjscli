@@ -21,6 +21,8 @@ const clc = require("cli-color");
 const config_1 = __importDefault(require("./config"));
 const archiver = require("archiver");
 const path_1 = __importDefault(require("path"));
+const json = require("../../command.json");
+const readme_1 = require("../readme");
 const REGION = "us-east-1";
 const s3Client = new client_s3_2.S3Client({
     forcePathStyle: false,
@@ -34,12 +36,18 @@ const s3Client = new client_s3_2.S3Client({
 const findFile = (route, source, message, type, id) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         // if (await fs.existsSync(route)) return await fs.mkdirSync(route);
-        const routes = "Miky2606/new/";
         if (type === "upload") {
-            yield uploadFolderToS3(config_1.default.Bucket, source, `Miky2606/new/`);
+            console.log(route);
+            yield uploadFolderToS3(config_1.default.Bucket, source, route);
         }
         else {
-            yield downloadFolderFromS3(config_1.default.Bucket, routes, route);
+            const download = yield downloadFolderFromS3(config_1.default.Bucket, route, source);
+            if (download) {
+                removeFolderAndFilesEmpty(source);
+                return readCommandFile(route, id);
+            }
+            else
+                return console.error("Error in the download");
         }
         // return console.log(clc.green(message));
     }
@@ -75,6 +83,7 @@ const readCommandFile = (route, id) => __awaiter(void 0, void 0, void 0, functio
             if (!run)
                 process.exit(-1);
         }
+        console.log("download success");
     }
     catch (error) {
         console.log(error);
@@ -95,11 +104,11 @@ const createInit = () => __awaiter(void 0, void 0, void 0, function* () {
         const templates = [
             {
                 name: "command.json",
-                content: yield getReadme(`C:/Users/Jonathan/Desktop/tempjs/command.json`),
+                content: toStringInit(json),
             },
             {
                 name: "readme.md",
-                content: yield getReadme(`C:/Users/Jonathan/Desktop/tempjs/readme.md`),
+                content: toStringInit(readme_1.readme),
             },
         ];
         return templates.map((e) => fs_1.default.writeFileSync(e.name, e.content));
@@ -109,10 +118,14 @@ const createInit = () => __awaiter(void 0, void 0, void 0, function* () {
     }
 });
 exports.createInit = createInit;
-const getReadme = (route) => __awaiter(void 0, void 0, void 0, function* () {
-    const x = yield fs_1.default.readFileSync(route);
-    return x.toString();
-});
+const toStringInit = (route) => {
+    console.log(typeof route);
+    if (typeof route === 'object')
+        return JSON.stringify(json);
+    if (typeof route === 'string')
+        return route;
+    return route;
+};
 const uploadFiles = (route, source) => __awaiter(void 0, void 0, void 0, function* () {
     const routes_split = route.split("/");
     try {
@@ -160,7 +173,7 @@ const streamToString = (stream) => new Promise((resolve, reject) => {
     stream.on("error", reject);
     stream.on("end", () => resolve(Buffer.concat(chunks).toString("utf8")));
 });
-function uploadFolderToS3(bucketName, folderPath, s3KeyPrefix = "") {
+function uploadFolderToS3(bucketName, folderPath, s3KeyPrefix) {
     return __awaiter(this, void 0, void 0, function* () {
         const files = fs_1.default.readdirSync(folderPath);
         for (const file of files) {
@@ -207,7 +220,6 @@ function getContentType(filePath) {
     }
 }
 function downloadFolderFromS3(bucketName, folderPath, route) {
-    var _a;
     return __awaiter(this, void 0, void 0, function* () {
         const listObjectsParams = {
             Bucket: bucketName,
@@ -225,10 +237,8 @@ function downloadFolderFromS3(bucketName, folderPath, route) {
                 const getObjectCommand = new client_s3_1.GetObjectCommand(getObjectParams);
                 const getObjectOutput = yield s3Client.send(getObjectCommand);
                 const relativeS3ObjectPath = s3Key.replace(folderPath, "");
-                console.log(relativeS3ObjectPath);
                 const localDirectory = path_1.default.join(route, relativeS3ObjectPath);
-                const split = (_a = object.Key) === null || _a === void 0 ? void 0 : _a.split("/");
-                if (object.Size === 0 || !split[split.length - 1].includes(".")) {
+                if (object.Size === 0) {
                     // This is an empty directory, create a local directory with the same name
                     fs_1.default.mkdirSync(localDirectory, { recursive: true });
                     continue;
@@ -237,6 +247,32 @@ function downloadFolderFromS3(bucketName, folderPath, route) {
                 fs_1.default.mkdirSync(path_1.default.dirname(localDirectory), { recursive: true });
                 const buffer = yield streamToString(getObjectOutput.Body);
                 fs_1.default.writeFileSync(path_1.default.join(route, relativeS3ObjectPath), buffer);
+            }
+            return true;
+        }
+        catch (error) {
+            console.error(error);
+            return false;
+        }
+    });
+}
+function removeFolderAndFilesEmpty(source) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const files = fs_1.default.readdirSync(source);
+            for (const file of files) {
+                const filePath = `${source}/${file}`;
+                if (fs_1.default.statSync(filePath).isDirectory()) {
+                    removeFolderAndFilesEmpty(filePath);
+                    if (fs_1.default.readdirSync(filePath).length === 0) {
+                        fs_1.default.rmdirSync(filePath);
+                    }
+                }
+                else {
+                    if (fs_1.default.statSync(filePath).size === 0) {
+                        fs_1.default.unlinkSync(filePath);
+                    }
+                }
             }
         }
         catch (error) {
