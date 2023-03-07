@@ -1,6 +1,8 @@
 {
   "command": {
-    "cd": "hola3",
+    "cd": "",
+
     "code": "."
-  }
+  },
+  "description": "New Template"
 }

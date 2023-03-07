@@ -69,12 +69,13 @@ const find_template = (id) => __awaiter(void 0, void 0, void 0, function* () {
     }
 });
 exports.find_template = find_template;
-const upload_template = (code_auth, name) => __awaiter(void 0, void 0, void 0, function* () {
+const upload_template = (code_auth, name, description) => __awaiter(void 0, void 0, void 0, function* () {
     var _b;
     try {
         const find = yield axios_1.default.post(`${API_URL}/templates`, {
             code_auth: code_auth,
             name: name,
+            description: description,
         });
         return {
             data: find.data.data,

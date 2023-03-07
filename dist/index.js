@@ -10,8 +10,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const upload_controller_1 = require("./controller/upload_controller");
-const api_controller_1 = require("./controller/api_controller");
+const init_1 = require("./controller/init");
+const upload_1 = require("./controller/upload/upload");
+const download_1 = require("./controller/download/download");
 const { program } = require("commander");
 const clc = require("cli-color");
 program
@@ -19,43 +20,26 @@ program
     .option("-u,--upload <char>", "Upload a template")
     .option("-n , --name <char>", "Set the template name")
     .option("-d, --download <char>", "Download Template")
-    .option("-i, --init", "Init The template")
+    .option("-i, --init", "Init The template s")
     .action((option) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a, _b, _c, _d, _e;
     try {
         if (option.upload !== undefined && option.download === undefined) {
             if (option.upload === undefined)
                 return console.error(clc.red("For the upload template you must provide your code auth with after  the command -u or --upload"));
             if (option.name === undefined)
                 return console.log(clc.red("For the upload template you must provide a name with the command -n or --name"));
-            const resp = yield (0, api_controller_1.upload_template)(option.upload, option.name);
-            const route = `${(_a = resp.data) === null || _a === void 0 ? void 0 : _a.user.name}/${option.name}`;
-            if (resp.error === undefined) {
-                const find = yield (0, upload_controller_1.findFile)(route, process.cwd(), "", "upload", "");
-                if (typeof find === "string") {
-                    setTimeout(() => __awaiter(void 0, void 0, void 0, function* () {
-                        var _f;
-                        const delete_temp = yield (0, api_controller_1.delete_template)((_f = resp.data) === null || _f === void 0 ? void 0 : _f.id);
-                        console.log(delete_temp);
-                    }), 2000);
-                }
-            }
-            return console.log(resp);
+            yield (0, upload_1.upload_init)(option.upload, option.name);
         }
         //Download
         if (option.download !== undefined) {
-            const resp_template = yield (0, api_controller_1.find_template)(option.download);
-            const route = `${(_b = resp_template.data) === null || _b === void 0 ? void 0 : _b.user[0].name}/${(_c = resp_template.data) === null || _c === void 0 ? void 0 : _c.name}`;
-            const update = yield (0, api_controller_1.update_downloads)((_d = resp_template.data) === null || _d === void 0 ? void 0 : _d._id);
-            const route_download = `${process.cwd()}/${option.name === undefined ? (_e = resp_template.data) === null || _e === void 0 ? void 0 : _e.name : option.name}`;
-            if (resp_template.error !== undefined)
-                return console.table(resp_template.error);
-            return (0, upload_controller_1.findFile)(route, route_download, "Successfylly download", "download", option.name);
+            console.log(option.download);
+            yield (0, download_1.download_init)(option.download, option.name);
         }
         //Init
         if (option.init) {
-            (0, upload_controller_1.createInit)();
+            (0, init_1.createInit)();
         }
+        console.log(process.exit());
     }
     catch (error) {
         return console.error(clc.red(error));

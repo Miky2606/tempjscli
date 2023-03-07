@@ -64,7 +64,8 @@ export const find_template = async (
 
 export const upload_template = async (
   code_auth: string,
-  name: string
+  name: string,
+  description: string
 ): Promise<ResponseServer<{ user: IUser; id: string }>> => {
   try {
     const find = await axios.post<{ data: { user: IUser; id: string } }>(
@@ -72,6 +73,7 @@ export const upload_template = async (
       {
         code_auth: code_auth,
         name: name,
+        description: description,
       }
     );
 
