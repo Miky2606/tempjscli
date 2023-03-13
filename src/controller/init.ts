@@ -1,16 +1,6 @@
-import {
-  ErrorDocumentFilterSensitiveLog,
-  GetObjectCommand,
-  ListObjectsV2CommandOutput,
-  PutObjectCommand,
-} from "@aws-sdk/client-s3";
-import { execSync } from "child_process";
 import fs from "fs";
 import { ITemplateInit } from "interface/interface_api";
-import { S3Client, ListObjectsV2Command } from "@aws-sdk/client-s3";
 const clc = require("cli-color");
-import modules from "./config";
-const archiver = require("archiver");
 import path from "path";
 const json = require("../../command.json");
 import { readme } from "../readme";

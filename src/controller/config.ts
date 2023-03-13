@@ -1,11 +1,11 @@
 import { S3Client } from "@aws-sdk/client-s3";
-import { config } from "dotenv";
+import * as dotenv from "dotenv";
 
-config();
+dotenv.config({ path: __dirname + "/.env" });
 
 const configs = {
-  Endpoint: "nyc3.digitaloceanspaces.com",
-  Bucket: "lazytemps",
+  Endpoint: process.env.ENDPOINT,
+  Bucket: process.env.BUCKET,
 };
 
 const REGION = "us-east-1";
@@ -22,7 +22,7 @@ const s3Client = new S3Client({
 });
 
 export default {
-  Endpoint: "nyc3.digitaloceanspaces.com",
-  Bucket: "lazytemps",
+  Endpoint: configs.Endpoint,
+  Bucket: configs.Bucket,
   s3Client,
 };

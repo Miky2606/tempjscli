@@ -15,7 +15,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.createInit = void 0;
 const fs_1 = __importDefault(require("fs"));
 const clc = require("cli-color");
-const archiver = require("archiver");
 const path_1 = __importDefault(require("path"));
 const json = require("../../command.json");
 const readme_1 = require("../readme");

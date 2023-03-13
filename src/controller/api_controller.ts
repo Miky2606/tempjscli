@@ -1,7 +1,9 @@
 import axios, { AxiosError } from "axios";
 import { ITemplate, IUser, ResponseServer } from "interface/interface_api";
+import * as dotenv from "dotenv";
 
-const API_URL = "http://localhost:3000/api/";
+dotenv.config({ path: __dirname + "/.env" });
+const API_URL = process.env.API_URL || "https://lazytemp.com/api/";
 
 const responseError = <T>(error: AxiosError): ResponseServer<T> => {
   if (error.response?.status === 400)
